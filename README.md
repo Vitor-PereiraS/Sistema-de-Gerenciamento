@@ -1,3 +1,10 @@
+
+![Em Desenvolvimento](https://img.shields.io/badge/Em_desenvolvimento-yellow)
+![Java](https://img.shields.io/badge/Java-8-blue)
+![OracleDB](https://img.shields.io/badge/OracleDB-blue)
+![JDBC](https://img.shields.io/badge/JDBC-blue)
+![Maven](https://img.shields.io/badge/Maven-blue) 
+
 # Projeto Prático — Sistema de Gerenciamento
 
 ## 1. Descrição
