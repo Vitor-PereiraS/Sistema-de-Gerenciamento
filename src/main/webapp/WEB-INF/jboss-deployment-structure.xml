@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure>
+    <deployment>
+        <dependencies>
+            <!-- Isso diz ao WildFly para liberar o driver Oracle para este projeto -->
+            <module name="com.oracle" />
+            <module name="org.hibernate" export="true"/>
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>

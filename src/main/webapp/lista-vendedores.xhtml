@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<title>Lista de Vendedors</title>
+</h:head>
+
+<h:body>
+	<p:messages id="mensagensGlobais" autoUpdate="true" closable="true"
+		showDetail="true" />
+	<h:form id="formPrincipal">
+
+		<!-- PAINEL DE PESQUISA CUSTOMIZADO NO INÍCIO -->
+		<h:panelGrid cellpadding="5" style="margin-bottom:10px;">
+			<p:outputPanel>
+
+				<p:selectOneMenu id="campoPesquisa" value="#{seller.campoFiltro}">
+					<f:selectItem itemLabel="Pesquisar por" itemValue="#{null}"
+						noSelectionOption="true" />
+					<f:selectItem itemLabel="Nome" itemValue="NOME" />
+					<f:selectItem itemLabel="Email" itemValue="EMAIL" />
+					<!-- Executa a busca se o usuário mudar o campo do dropdown -->
+					<p:ajax event="change" listener="#{seller.filtrar()}"
+						update="tabelaDeps" />
+				</p:selectOneMenu>
+
+				<p:inputText id="valorPesquisa" value="#{seller.valorFiltro}"
+					placeholder="Digite sua busca...">
+
+					<!-- O SEGREDO ESTÁ AQUI: Dispara o filtro no Java enquanto digita -->
+					<!-- delay="300": Aguarda 300ms após parar de digitar para enviar ao servidor -->
+					<p:ajax event="keyup" listener="#{seller.filtrar()}"
+						update="tabelaDeps" delay="300" />
+				</p:inputText>
+			</p:outputPanel>
+
+			<p:outputPanel>
+				<p:selectOneMenu label="Departamentos"
+					value="#{seller.departamentoFiltro}">
+
+					<f:selectItem itemLabel="Departamentos" itemValue="#{null}"
+						noSelectionOption="true" />
+
+					<f:selectItems value="#{department.listaDepartamentos}" var="dep"
+						itemLabel="#{dep.name}" itemValue="#{dep.name}" />
+
+					<p:ajax listener="#{seller.filtrar()}" update="tabelaDeps" />
+				</p:selectOneMenu>
+			</p:outputPanel>
+
+			<p:outputPanel>
+				<p:outputLabel for="valorMin" value="Salário: " />
+				<p:inputText id="valorMin" value="#{seller.salarioFiltroMin}"
+					placeholder="Valor Minimo..."
+					validatorMessage="O valor não pode ser negativo."
+					onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;">
+
+					<f:validateLongRange minimum="0" />
+					<f:convertNumber minFractionDigits="2" maxFractionDigits="2"
+						locale="pt_BR" />
+					<p:ajax event="keyup" listener="#{seller.filtrar()}"
+						update="tabelaDeps" delay="300" />
+				</p:inputText>
+
+				<p:inputText id="valorMax" value="#{seller.salarioFiltroMax}"
+					placeholder="Valor Máximo..."
+					validatorMessage="O valor não pode ser negativo."
+					onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;">
+
+					<f:validateLongRange minimum="0" />
+					<f:convertNumber minFractionDigits="2" maxFractionDigits="2"
+						locale="pt_BR" />
+					<p:ajax event="keyup" listener="#{seller.filtrar()}"
+						update="tabelaDeps" delay="300" />
+				</p:inputText>
+			</p:outputPanel>
+
+
+			<p:outputPanel>
+				<p:outputLabel value="Datas: " />
+
+
+				<p:calendar id="dataInicio" value="#{seller.dataInicio}"
+					placeholder="data Inicio" pattern="dd/MM/yyyy" mask="true"
+					converter="localDateConverter">
+
+					<p:ajax event="change" listener="#{seller.filtrar()}"
+						update="tabelaDeps" />
+
+				</p:calendar>
+
+
+
+				<p:calendar id="dataFim" value="#{seller.dataFim}"
+					placeholder="data final" pattern="dd/MM/yyyy" mask="true"
+					converter="localDateConverter">
+
+					<p:ajax event="change" listener="#{seller.filtrar()}"
+						update="tabelaDeps" />
+				</p:calendar>
+			</p:outputPanel>
+
+			<p:outputPanel>
+				<p:commandButton value="filtrar" action="#{seller.filtrar()}"
+					update="@this" icon="ui-icon-close" />
+			</p:outputPanel>
+
+
+			<p:outputPanel>
+				<!-- Mantemos apenas o botão de limpar para resetar a busca rapidamente -->
+				<p:commandButton value="Limpar Filtros"
+					action="#{seller.limparFiltro()}" update="formPrincipal"
+					icon="ui-icon-close" />
+			</p:outputPanel>
+		</h:panelGrid>
+
+
+		<br />
+
+		<p:commandButton value="Adicionar Vendedor"
+			action="#{seller.prepararNovo()}" update=":formInserir"
+			oncomplete="PF('dialogNovoDep').show();" />
+		<p:dataTable id="tabelaDeps" value="#{seller.vendedoresFiltrados}"
+			var="vend" paginator="true" rows="5" selectionMode="single"
+			selection="#{seller.vendedorSelecionado}"
+			emptyMessage="Nenhum vendedor encontrado com esses critérios"
+			paginatorPosition="bottom" sortMode="multiple" rowKey="#{vend.id}"
+			unselectable="true" metaKeySelection="false">
+
+
+			<!-- Eventos AJAX que notificam o servidor e re-renderizam o botão externo imediatamente -->
+			<p:ajax event="rowSelect"
+				listener="#{seller.habilitarLinhaSelecionada}"
+				update=":formPrincipal:painelBotao" />
+
+			<p:ajax event="rowUnselect"
+				listener="#{seller.desabilitarLinhaSelecionada}"
+				update=":formPrincipal:painelBotao" />
+
+
+
+			<p:column headerText="ID" sortBy="#{vend.id}">
+				<h:outputText value="#{vend.id}" />
+			</p:column>
+
+			<p:column headerText="Nome" sortBy="#{vend.name}">
+				<h:outputText value="#{vend.name}" />
+			</p:column>
+
+			<p:column headerText="Email" sortBy="#{vend.email}">
+				<h:outputText value="#{vend.email}" />
+			</p:column>
+
+			<p:column headerText="Data de nascimento" sortBy="#{vend.birthDate}">
+				<h:outputText value="#{vend.birthDate}"
+					converter="localDateConverter">
+				</h:outputText>
+			</p:column>
+
+			<p:column headerText="Salário" sortBy="#{vend.baseSalary}">
+				<h:outputText value="#{vend.baseSalary}">
+					<f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR" />
+				</h:outputText>
+			</p:column>
+
+			<p:column headerText="Departamento" sortBy="#{vend.department.name}">
+				<h:outputText value="#{vend.department.name}" />
+			</p:column>
+
+			<!-- NOVA COLUNA COM AS AÇÕES -->
+			<p:column headerText="Ações"
+				style="width: 120px; text-align: center;">
+
+				<!-- BOTÃO EDITAR (Passa o registro da linha para o Bean e abre o mesmo dialog) -->
+				<p:commandButton icon="ui-icon-pencil" title="Editar"
+					action="#{seller.pegarVendedor(vend)}" update=":formInserir"
+					oncomplete="PF('dialogNovoDep').show();" process="@this" />
+
+				<!-- BOTÃO EXCLUIR (Remove do banco e atualiza a tabela na hora) -->
+				<p:commandButton icon="ui-icon-trash" title="Excluir"
+					action="#{seller.deletar(vend.id)}"
+					update=":formPrincipal:tabelaDeps" process="@this">
+					<!-- Confirmação nativa simples para evitar exclusão por acidente -->
+					<p:confirm header="Confirmação"
+						message="Deseja realmente excluir o vendedor? #{vend.name}"
+						icon="ui-icon-alert" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+		<!-- Componente obrigatório para fazer o p:confirm funcionar -->
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<p:commandButton value="Sim" type="button"
+				styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+			<p:commandButton value="Não" type="button"
+				styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		</p:confirmDialog>
+
+		<p:outputPanel id="painelBotao" layout="block">
+			<p:commandButton id="btnProcessar" value="Editar Selecionado"
+				icon="ui-icon-pencil" action="#{seller.pegarVendedorSelecionado()}"
+				disabled="#{seller.vendedorSelecionado == null}"
+				update=":formInserir" oncomplete="PF('dialogNovoDep').show();" />
+
+			<p:commandButton id="btnDeletar" value="Deletar Selecionado"
+				icon="ui-icon-trash" action="#{seller.deletarSelecionado()}"
+				disabled="#{seller.vendedorSelecionado == null}"
+				update=":formInserir">
+				<p:confirm header="Confirmação"
+					message="Deseja realmente excluir o vendedor? #{vend.name}"
+					icon="ui-icon-alert" />
+			</p:commandButton>
+			<p:commandButton id="btnConsultar" value="Consultar Selecionado"
+				icon="ui-icon-search" action="#{seller.pegarVendedorSelecionado()}"
+				disabled="#{seller.vendedorSelecionado == null}"
+				update=":formConsultar"
+				oncomplete="PF('dialogConsultarVend').show();" />
+
+			<p:commandButton id="btnAddDocumento" value="Adicionar Documento"
+				icon="pi pi-plus-circle" action="#{seller.pegarVendedorSelecionado()}"
+				disabled="#{seller.vendedorSelecionado == null}"
+				update=":formDocumento"
+				oncomplete="PF('dialogAddDocumentoVend').show();" />
+
+		</p:outputPanel>
+	</h:form>
+
+	<br />
+
+	<!-- Botão com aparência do PrimeFaces que age como link -->
+	<p:button outcome="lista-departamentos.xhtml"
+		value="Ir para a Lista de departamentos" icon="pi pi-check" />
+
+	<!-- 2. JANELA FLUTUANTE (INSERÇÃO) -->
+	<!-- Fica fora do formPrincipal, isolada no final do arquivo -->
+	<p:dialog header="#{seller.tituloDialog}" widgetVar="dialogNovoDep"
+		modal="true" resizable="false" closeOnEscape="true" appendTo="@(body)">
+		<!-- Form exclusivo para os campos do novo departamento -->
+		<h:form id="formInserir" enctype="multipart/form-data">
+			<div
+				style="font-size: 1.5em; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 15px; padding-bottom: 5px;">
+				<h:outputText value="#{seller.tituloDialog}" />
+			</div>
+			<p:messages id="msgDialog" autoUpdate="true" />
+
+
+
+			<h:panelGrid columns="2" cellpadding="5">
+				<p:outputLabel for="nome" value="Nome:" />
+				<p:inputText id="nome" value="#{seller.novoSeller.name}"
+					required="true" requiredMessage="O nome é obrigatório!" />
+
+				<p:outputLabel for="email" value="Email:" />
+				<p:inputText id="email" value="#{seller.novoSeller.email}"
+					required="true" requiredMessage="O Email é obrigatório!"
+					validatorMessage="O formato do e-mail inserido é inválido.">
+
+					<f:validateRegex
+						pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+				</p:inputText>
+
+				<p:outputLabel for="data" value="Data de nascimento: " />
+				<p:calendar id="data" value="#{seller.novoSeller.birthDate}"
+					required="true"
+					requiredMessage="A Data de nascimento é obrigatória!"
+					pattern="dd/MM/yyyy" mask="true" converter="localDateConverter" />
+
+				<p:outputLabel for="salario" value="Salário: " />
+				<p:inputText id="salario" value="#{seller.novoSeller.baseSalary}"
+					required="true" requiredMessage="A salario é obrigatório!"
+					validatorMessage="O valor não pode ser negativo."
+					onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;">
+
+					<f:validateLongRange minimum="0" />
+					<f:convertNumber minFractionDigits="2" maxFractionDigits="2"
+						locale="pt_BR" />
+				</p:inputText>
+
+				<p:outputLabel for="departamento" value="Departamento :" />
+				<p:selectOneMenu id="departamento"
+					value="#{seller.idDepartamentoSelecionado}" required="true">
+					<!-- Opção padrão/placeholder -->
+					<f:selectItem itemLabel="Selecione..." itemValue=""
+						noSelectionOption="true" />
+
+					<!-- Lista de opções dinâmicas vinda do Bean -->
+					<f:selectItems value="#{department.listaDepartamentos}" var="dep"
+						itemLabel="#{dep.name}" itemValue="#{dep.id}" />
+				</p:selectOneMenu>
+
+				
+			</h:panelGrid>
+
+			<br />
+
+			<!-- O SEGREDO ESTÁ AQUI: O update aponta lá para o formPrincipal 
+			oncomplete="
+						if (!args.validationFailed)PF('dialogNovoDep').hide();"
+			-->
+			<p:commandButton value="Salvar" action="#{seller.salvar}"
+				update=":formPrincipal" icon="ui-icon-disk"
+				oncomplete="if (!args.validationFailed) PF('dialogNovoDep').hide();" />
+			<p:commandButton value="Limpar" type="reset" icon="ui-icon-refresh"
+				style="margin-left: 10px;" />
+
+		</h:form>
+
+	</p:dialog>
+
+
+	<p:dialog header="Vendedor" widgetVar="dialogConsultarVend"
+		modal="true" resizable="false" closeOnEscape="true" appendTo="@(body)">
+		<!-- Form exclusivo para os campos do novo departamento -->
+		<h:form id="formConsultar">
+
+			<h:panelGrid>
+				<h:outputText value="Nome:" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.name}" />
+
+				<h:outputText value="Email:" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.email}" />
+
+				<h:outputText value="Deta de Nascimento:" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.dataFormatada}" />
+
+				<h:outputText value="Salário :" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.baseSalary}">
+					<f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR" />
+				</h:outputText>
+
+				<h:outputText value="Departamento:" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.department.name}" />
+
+			</h:panelGrid>
+		</h:form>
+
+	</p:dialog>
+	
+	<p:dialog header="Adicionar arquivo" widgetVar="dialogAddDocumentoVend"
+		modal="true" resizable="false" closeOnEscape="true" appendTo="@(body)">
+		<!-- Form exclusivo para os campos do novo departamento -->
+		<h:form id="formDocumento" enctype="multipart/form-data">
+
+			<h:panelGrid>
+				<h:outputText value="Nome:" style="font-weight: bold;" />
+				<h:outputText value="#{seller.vendedorSelecionado.name}" />
+			
+				<p:outputLabel for="arquivo" value="Documento (PDF/Imagem):" />
+				<p:fileUpload id="arquivo" value="#{seller.arquivoUploaded}"
+					mode="simple" skinSimple="true" />
+
+			</h:panelGrid>
+			
+			<br />
+
+			<!-- O SEGREDO ESTÁ AQUI: O update aponta lá para o formPrincipal 
+			oncomplete="
+						if (!args.validationFailed)PF('dialogNovoDep').hide();"
+			-->
+			<p:commandButton value="Salvar" action="#{seller.incluirArquivo}"
+				ajax="false" icon="ui-icon-disk" />
+			<p:commandButton value="Limpar" type="reset" icon="ui-icon-refresh"
+				style="margin-left: 10px;" />
+		</h:form>
+
+	</p:dialog>
+
+
+</h:body>
+<script type="text/javascript">
+    if (PrimeFaces.widget.DataTable) {
+        PrimeFaces.widget.DataTable.prototype.onRowClick = function(event, rowElement, silent) {
+            // Garante que o clique foi em um elemento interativo comum (célula da tabela)
+            if ($(event.target).is('td,span:not(.ui-c)')) {
+                var row = $(rowElement),
+                    isSelected = row.hasClass('ui-state-highlight');
+
+                // SE A LINHA JÁ ESTIVER SELECIONADA: Desmarca a linha e limpa o campo hidden do PrimeFaces
+                if (isSelected) {
+                    this.unselectRow(row, silent);
+                    this.cursorIndex = null;
+                } 
+                // SE NÃO ESTIVER SELECIONADA: Limpa as outras e seleciona a nova linha
+                else {
+                    this.unselectAllRows();
+                    this.originRowIndex = row.index();
+                    this.cursorIndex = null;
+                    this.selectRow(row, silent);
+                }
+                
+                // Evita que seleções fantasmas de texto ocorram no navegador pelo clique duplo
+                PrimeFaces.clearSelection();
+            }
+        };
+    }
+</script>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<title>Lista de Departamentos</title>
+</h:head>
+
+<h:body>
+	<p:messages id="mensagensGlobais" autoUpdate="true" closable="true"
+		showDetail="true" />
+	<h:form id="formPrincipal">
+		<p:commandButton value="Adicionar Departamento"
+			action="#{department.prepararNovo()}" update=":formInserir"
+			oncomplete="PF('dialogNovoDep').show();" />
+		<p:dataTable id="tabelaDeps" value="#{department.listaDepartamentos}"
+			var="dep" paginator="true" rows="10"
+			emptyMessage="Nenhum departamento cadastrado."
+			paginatorPosition="bottom" sortMode="multiple" selectionMode="single"
+			selection="#{department.departamentoSelecionado}" rowKey="#{dep.id}"
+			unselectable="true" >
+
+
+			<!-- Eventos AJAX que notificam o servidor e re-renderizam o botão externo imediatamente -->
+			<p:ajax event="rowSelect"
+				listener="#{department.habilitarLinhaSelecionada}"
+				update=":formPrincipal:painelBotao" />
+
+			<p:ajax event="rowUnselect"
+				listener="#{department.desabilitarLinhaSelecionada}"
+				update=":formPrincipal:painelBotao" />
+
+
+			<p:column headerText="ID" sortBy="#{dep.id}">
+				<h:outputText value="#{dep.id}" />
+			</p:column>
+
+			<p:column headerText="Nome do Departamento" sortBy="#{dep.name}">
+				<h:outputText value="#{dep.name}" />
+			</p:column>
+
+			<!-- NOVA COLUNA COM AS AÇÕES -->
+			<p:column headerText="Ações"
+				style="width: 120px; text-align: center;">
+
+				<!-- BOTÃO EDITAR (Passa o registro da linha para o Bean e abre o mesmo dialog) -->
+				<p:commandButton icon="ui-icon-pencil" title="Editar"
+					action="#{department.pegarDepartamento()}" update=":formInserir"
+					oncomplete="PF('dialogNovoDep').show();" process="@this" />
+
+				<!-- BOTÃO EXCLUIR (Remove do banco e atualiza a tabela na hora) -->
+				<p:commandButton icon="ui-icon-trash" title="Excluir"
+					action="#{department.deletar()}"
+					update=":formPrincipal:tabelaDeps" process="@this">
+					<!-- Confirmação nativa simples para evitar exclusão por acidente -->
+					<p:confirm header="Confirmação"
+						message="Deseja realmente excluir o departamento? #{dep.name}"
+						icon="ui-icon-alert" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+		<!-- Componente obrigatório para fazer o p:confirm funcionar -->
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<p:commandButton value="Sim" type="button"
+				styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+			<p:commandButton value="Não" type="button"
+				styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		</p:confirmDialog>
+
+		<p:outputPanel id="painelBotao" layout="block">
+			<p:commandButton id="btnProcessar" value="Editar Selecionado"
+				icon="ui-icon-pencil" action="#{department.pegarDepartamento()}"
+				disabled="#{department.departamentoSelecionado == null}"
+				update=":formInserir" oncomplete="PF('dialogNovoDep').show();" />
+
+			<p:commandButton id="btnDeletar" value="Deletar Selecionado"
+				icon="ui-icon-trash" action="#{department.deletar()}"
+				disabled="#{department.departamentoSelecionado== null}"
+				update=":formPrincipal:tabelaDeps">
+				<p:confirm header="Confirmação"
+					message="Deseja realmente excluir o departamento? #{dep.name}"
+					icon="ui-icon-alert" />
+			</p:commandButton>
+		</p:outputPanel>
+
+	</h:form>
+
+	<br />
+
+	<p:button outcome="lista-vendedores.xhtml"
+		value="Ir para a Lista de vendedores" icon="pi pi-check" />
+
+	<!-- 2. JANELA FLUTUANTE (INSERÇÃO) -->
+	<!-- Fica fora do formPrincipal, isolada no final do arquivo -->
+	<p:dialog header="Inserir Novo Departamento" widgetVar="dialogNovoDep"
+		modal="true" resizable="false" closeOnEscape="true">
+		<!-- Form exclusivo para os campos do novo departamento -->
+		<h:form id="formInserir">
+
+			<p:messages id="msgDialog" autoUpdate="true" />
+
+			<h:panelGrid columns="2" cellpadding="5">
+				<p:outputLabel for="nome" value="Nome:" />
+				<p:inputText id="nome" value="#{department.novoDepartment.name}"
+					required="true" requiredMessage="O nome é obrigatório!" />
+			</h:panelGrid>
+
+			<br />
+
+			<!-- O SEGREDO ESTÁ AQUI: O update aponta lá para o formPrincipal 
+			oncomplete="if (!args.validationFailed) PF('dialogNovoDep').hide();"
+			-->
+			<p:commandButton value="Salvar" action="#{department.salvar}"
+				update=":formPrincipal:tabelaDeps" icon="ui-icon-disk"
+				oncomplete="if (!args.validationFailed) PF('dialogNovoDep').hide();" />
+			<p:commandButton value="Limpar" type="reset" icon="ui-icon-refresh"
+				style="margin-left: 10px;" />
+
+		</h:form>
+
+	</p:dialog>
+
+</h:body>
+
+<script type="text/javascript">
+    if (PrimeFaces.widget.DataTable) {
+        PrimeFaces.widget.DataTable.prototype.onRowClick = function(event, rowElement, silent) {
+            // Garante que o clique foi em um elemento interativo comum (célula da tabela)
+            if ($(event.target).is('td,span:not(.ui-c)')) {
+                var row = $(rowElement),
+                    isSelected = row.hasClass('ui-state-highlight');
+
+                // SE A LINHA JÁ ESTIVER SELECIONADA: Desmarca a linha e limpa o campo hidden do PrimeFaces
+                if (isSelected) {
+                    this.unselectRow(row, silent);
+                    this.cursorIndex = null;
+                } 
+                // SE NÃO ESTIVER SELECIONADA: Limpa as outras e seleciona a nova linha
+                else {
+                    this.unselectAllRows();
+                    this.originRowIndex = row.index();
+                    this.cursorIndex = null;
+                    this.selectRow(row, silent);
+                }
+                
+                // Evita que seleções fantasmas de texto ocorram no navegador pelo clique duplo
+                PrimeFaces.clearSelection();
+            }
+        };
+    }
+</script>
+</html>

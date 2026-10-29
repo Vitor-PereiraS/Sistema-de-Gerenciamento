@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<title>Cadastro de Departamento</title>
+</h:head>
+
+<h:body>
+	<h:form id="formDepartamento">
+		<!-- p:panel clássico do PF 5.2 -->
+		<p:panel header="Inserir Novo Departamento"
+			style="width: 500px; margin: 20px auto;">
+
+			<!-- Em 2015/PF 5.2, usamos o autoUpdate="true" direto no componente -->
+			<p:messages id="msgs" showDetail="true" closable="true"
+				autoUpdate="true" />
+
+			<!-- PanelGrid tradicional por colunas fixas -->
+			<p:panelGrid columns="1" style="width: 100%; margin-bottom: 10px;">
+
+				<p:outputLabel for="nome" value="Nome do Departamento:" />
+				<p:inputText id="nome" value="#{department.novoDepartment.name}"
+					required="true" requiredMessage="O nome é obrigatório."
+					style="width: 95%;" />
+
+			</p:panelGrid>
+
+			<!-- Botões com os ícones clássicos 'ui-icon-*' do jQuery UI -->
+			<p:commandButton value="Salvar" action="#{department.insert(department.novoDepartment)}"
+				update="#{department.listaDepartamentos}" icon="ui-icon-disk" />
+			<p:commandButton value="Limpar" type="reset" icon="ui-icon-refresh"
+				style="margin-left: 10px;" />
+
+		</p:panel>
+	</h:form>
+</h:body>
+</html>

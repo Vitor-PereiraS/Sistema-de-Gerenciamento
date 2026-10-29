@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://jcp.org"
+       xmlns:xsi="http://w3.org"
+       xsi:schemaLocation="http://jcp.org 
+                           http://jcp.org/beans_1_1.xsd"
+       bean-discovery-mode="all">
+</beans>
