@@ -40,7 +40,15 @@ public class DepartmentBean implements Serializable {
 	public void inicializar() {
 
 		this.listaDepartamentos = departmentService.findAll();
-
+		
+		if (listaDepartamentos.isEmpty()){
+			System.out.println("Lista vazia");
+		} else {
+		
+			for (DepartmentDto departmentDto : listaDepartamentos) {
+				System.out.println(departmentDto);
+			}
+		}
 	}
 
 	/*

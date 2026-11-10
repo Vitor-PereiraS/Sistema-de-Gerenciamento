@@ -106,11 +106,7 @@
 			<p:outputPanel>
 				<p:commandButton value="filtrar" action="#{seller.filtrar()}"
 					update="@this" icon="ui-icon-close" />
-			</p:outputPanel>
-
-
-			<p:outputPanel>
-				<!-- Mantemos apenas o botão de limpar para resetar a busca rapidamente -->
+					
 				<p:commandButton value="Limpar Filtros"
 					action="#{seller.limparFiltro()}" update="formPrincipal"
 					icon="ui-icon-close" />
@@ -232,6 +228,9 @@
 	<!-- Botão com aparência do PrimeFaces que age como link -->
 	<p:button outcome="lista-departamentos.xhtml"
 		value="Ir para a Lista de departamentos" icon="pi pi-check" />
+		
+		<p:button outcome="lista-documentos.xhtml"
+		value="Ir para a Lista de documentos" icon="pi pi-check" />
 
 	<!-- 2. JANELA FLUTUANTE (INSERÇÃO) -->
 	<!-- Fica fora do formPrincipal, isolada no final do arquivo -->
@@ -369,31 +368,5 @@
 
 
 </h:body>
-<script type="text/javascript">
-    if (PrimeFaces.widget.DataTable) {
-        PrimeFaces.widget.DataTable.prototype.onRowClick = function(event, rowElement, silent) {
-            // Garante que o clique foi em um elemento interativo comum (célula da tabela)
-            if ($(event.target).is('td,span:not(.ui-c)')) {
-                var row = $(rowElement),
-                    isSelected = row.hasClass('ui-state-highlight');
 
-                // SE A LINHA JÁ ESTIVER SELECIONADA: Desmarca a linha e limpa o campo hidden do PrimeFaces
-                if (isSelected) {
-                    this.unselectRow(row, silent);
-                    this.cursorIndex = null;
-                } 
-                // SE NÃO ESTIVER SELECIONADA: Limpa as outras e seleciona a nova linha
-                else {
-                    this.unselectAllRows();
-                    this.originRowIndex = row.index();
-                    this.cursorIndex = null;
-                    this.selectRow(row, silent);
-                }
-                
-                // Evita que seleções fantasmas de texto ocorram no navegador pelo clique duplo
-                PrimeFaces.clearSelection();
-            }
-        };
-    }
-</script>
 </html>
